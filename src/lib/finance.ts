@@ -76,3 +76,48 @@ export function cagr(begin: number, end: number, n: number): number {
   if (begin <= 0 || n <= 0) return NaN
   return Math.pow(end / begin, 1 / n) - 1
 }
+
+export interface AmortizationRow {
+  period: number
+  payment: number
+  interest: number
+  principal: number
+  balance: number
+  cumulativeInterest: number
+  cumulativePrincipal: number
+}
+
+/**
+ * Build a full loan amortization schedule. `r` is the rate per period and `n`
+ * the number of (integer) periods. The final period absorbs any rounding so
+ * the ending balance is exactly zero.
+ */
+export function amortizationSchedule(principal: number, r: number, n: number): AmortizationRow[] {
+  const periods = Math.max(0, Math.round(n))
+  if (periods === 0 || principal <= 0) return []
+
+  const pmt = payment(principal, r, periods)
+  const rows: AmortizationRow[] = []
+  let balance = principal
+  let cumulativeInterest = 0
+  let cumulativePrincipal = 0
+
+  for (let p = 1; p <= periods; p++) {
+    const interest = balance * r
+    let principalPaid = pmt - interest
+    if (p === periods) principalPaid = balance // clear any residual at the end
+    balance = Math.max(0, balance - principalPaid)
+    cumulativeInterest += interest
+    cumulativePrincipal += principalPaid
+    rows.push({
+      period: p,
+      payment: interest + principalPaid,
+      interest,
+      principal: principalPaid,
+      balance,
+      cumulativeInterest,
+      cumulativePrincipal,
+    })
+  }
+  return rows
+}

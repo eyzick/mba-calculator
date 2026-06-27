@@ -2,7 +2,7 @@ import { FIELD_GROUPS } from '../lib/assumptions'
 import { useAssumptions } from '../state/AssumptionsContext'
 import { NumberField } from './NumberField'
 
-export function AssumptionsPanel() {
+export function AssumptionsPanel({ onClose }: { onClose?: () => void }) {
   const { assumptions, setField, reset, isDirty } = useAssumptions()
 
   return (
@@ -12,9 +12,16 @@ export function AssumptionsPanel() {
           <h2 className="panel__title">Assumptions</h2>
           <p className="panel__subtitle">Exhibit 1 — base case</p>
         </div>
-        <button className="btn" onClick={reset} disabled={!isDirty} title="Restore Exhibit 1 values">
-          Reset
-        </button>
+        <div className="panel__header-actions">
+          <button className="btn" onClick={reset} disabled={!isDirty} title="Restore Exhibit 1 values">
+            Reset
+          </button>
+          {onClose ? (
+            <button className="btn btn--icon" onClick={onClose} aria-label="Close assumptions">
+              ✕
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <div className="panel__groups">

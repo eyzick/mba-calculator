@@ -13,6 +13,8 @@ import {
 } from '../lib/finance'
 import { money, percent } from '../lib/format'
 import type { Calculator } from '../lib/types'
+import { CompoundingTable } from '../components/CompoundingTable'
+import { AmortizationTable } from '../components/AmortizationTable'
 
 const TVM = 'Time value of money'
 const RATES = 'Rates & growth'
@@ -23,21 +25,50 @@ export const presentValueLumpSum: Calculator = {
   id: 'pv-lump-sum',
   title: 'Present value (lump sum)',
   caseGroup: TVM,
-  formula: 'PV = FV / (1 + r)ⁿ',
-  description: 'Discount a single future cash flow back to today.',
+  formula: 'PV = FV / (1 + r/m)^(m·t)',
+  description:
+    'Discount a single future cash flow back to today, compounding m times per year (annual = 1, semiannual = 2, quarterly = 4, monthly = 12, daily = 365). Set m = 0 for continuous compounding (PV = FV·e^(−r·t)).',
   inputs: [
     { key: 'fv', label: 'Future value (FV)', format: 'currency', default: 1000, step: 100 },
-    { key: 'r', label: 'Rate per period (r)', format: 'percent', default: 0.05, step: 0.25 },
-    { key: 'n', label: 'Periods (n)', format: 'number', default: 10, step: 1 },
-  ],
-  compute: (_a, v) => [
+    { key: 'r', label: 'Annual rate (r)', format: 'percent', default: 0.05, step: 0.25 },
+    { key: 't', label: 'Years (t)', format: 'number', default: 10, step: 1 },
     {
-      rows: [
-        { label: 'Present value', value: money(presentValue(v.fv, v.r, v.n)), emphasis: true },
-        { label: 'Total discount', value: money(v.fv - presentValue(v.fv, v.r, v.n)) },
-      ],
+      key: 'm',
+      label: 'Compounding / year (m)',
+      format: 'number',
+      default: 1,
+      step: 1,
+      hint: 'annual 1 · semiannual 2 · quarterly 4 · monthly 12 · daily 365 · 0 = continuous',
     },
   ],
+  compute: (_a, v) => {
+    const continuous = v.m === 0
+    const pv = continuous ? v.fv * Math.exp(-v.r * v.t) : presentValue(v.fv, v.r / v.m, v.m * v.t)
+    const ear = continuous ? Math.exp(v.r) - 1 : effectiveAnnualRate(v.r, v.m)
+    return [
+      {
+        rows: [
+          { label: 'Present value', value: money(pv), emphasis: true },
+          { label: 'Total discount', value: money(v.fv - pv) },
+        ],
+      },
+      {
+        heading: 'Compounding detail',
+        rows: [
+          {
+            label: 'Periodic rate (r / m)',
+            value: continuous ? '— (continuous)' : percent(v.r / v.m, 4),
+          },
+          {
+            label: 'Number of periods (m · t)',
+            value: continuous ? '— (continuous)' : String(v.m * v.t),
+          },
+          { label: 'Effective annual rate', value: percent(ear, 4) },
+        ],
+      },
+    ]
+  },
+  extra: (_a, v) => <CompoundingTable r={v.r} m={v.m} />,
 }
 
 export const futureValueLumpSum: Calculator = {
@@ -89,6 +120,7 @@ export const futureValueLumpSum: Calculator = {
       },
     ]
   },
+  extra: (_a, v) => <CompoundingTable r={v.r} m={v.m} principal={v.pv} t={v.t} />,
 }
 
 export const annuityPresentValue: Calculator = {
@@ -220,6 +252,7 @@ export const loanPayment: Calculator = {
       },
     ]
   },
+  extra: (_a, v) => <AmortizationTable principal={v.pv} r={v.r} n={v.n} />,
 }
 
 export const netPresentValue: Calculator = {
