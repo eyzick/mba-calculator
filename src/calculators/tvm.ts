@@ -44,21 +44,51 @@ export const futureValueLumpSum: Calculator = {
   id: 'fv-lump-sum',
   title: 'Future value (lump sum)',
   caseGroup: TVM,
-  formula: 'FV = PV (1 + r)ⁿ',
-  description: 'Grow a single present cash flow forward in time.',
+  formula: 'FV = PV (1 + r/m)^(m·t)',
+  description:
+    'Grow a single present cash flow forward, compounding m times per year (annual = 1, semiannual = 2, quarterly = 4, monthly = 12, daily = 365). Set m = 0 for continuous compounding (FV = PV·e^(r·t)).',
   inputs: [
     { key: 'pv', label: 'Present value (PV)', format: 'currency', default: 1000, step: 100 },
-    { key: 'r', label: 'Rate per period (r)', format: 'percent', default: 0.05, step: 0.25 },
-    { key: 'n', label: 'Periods (n)', format: 'number', default: 10, step: 1 },
-  ],
-  compute: (_a, v) => [
+    { key: 'r', label: 'Annual rate (r)', format: 'percent', default: 0.05, step: 0.25 },
+    { key: 't', label: 'Years (t)', format: 'number', default: 10, step: 1 },
     {
-      rows: [
-        { label: 'Future value', value: money(futureValue(v.pv, v.r, v.n)), emphasis: true },
-        { label: 'Total interest earned', value: money(futureValue(v.pv, v.r, v.n) - v.pv) },
-      ],
+      key: 'm',
+      label: 'Compounding / year (m)',
+      format: 'number',
+      default: 1,
+      step: 1,
+      hint: 'annual 1 · semiannual 2 · quarterly 4 · monthly 12 · daily 365 · 0 = continuous',
     },
   ],
+  compute: (_a, v) => {
+    const continuous = v.m === 0
+    const fv = continuous
+      ? v.pv * Math.exp(v.r * v.t)
+      : futureValue(v.pv, v.r / v.m, v.m * v.t)
+    const ear = continuous ? Math.exp(v.r) - 1 : effectiveAnnualRate(v.r, v.m)
+    return [
+      {
+        rows: [
+          { label: 'Future value', value: money(fv), emphasis: true },
+          { label: 'Total interest earned', value: money(fv - v.pv) },
+        ],
+      },
+      {
+        heading: 'Compounding detail',
+        rows: [
+          {
+            label: 'Periodic rate (r / m)',
+            value: continuous ? '— (continuous)' : percent(v.r / v.m, 4),
+          },
+          {
+            label: 'Number of periods (m · t)',
+            value: continuous ? '— (continuous)' : String(v.m * v.t),
+          },
+          { label: 'Effective annual rate', value: percent(ear, 4) },
+        ],
+      },
+    ]
+  },
 }
 
 export const annuityPresentValue: Calculator = {

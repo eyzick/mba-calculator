@@ -1,18 +1,18 @@
 import type { FieldFormat } from './types'
 
-/** Format a plain dollar amount, e.g. 958.42 -> "$958.42". */
-export function money(value: number, maxFractionDigits = 2): string {
+/** Format a plain dollar amount with two decimals, e.g. 958.4 -> "$958.40". */
+export function money(value: number, fractionDigits = 2): string {
   if (!Number.isFinite(value)) return '—'
   return value.toLocaleString('en-US', {
     style: 'currency',
     currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: maxFractionDigits,
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
   })
 }
 
-/** Format a value expressed in $millions, e.g. 550 -> "$550.0M". */
-export function millions(valueInMillions: number, fractionDigits = 1): string {
+/** Format a value expressed in $millions, e.g. 550 -> "$550.00M". */
+export function millions(valueInMillions: number, fractionDigits = 2): string {
   if (!Number.isFinite(valueInMillions)) return '—'
   const sign = valueInMillions < 0 ? '-' : ''
   const abs = Math.abs(valueInMillions)
