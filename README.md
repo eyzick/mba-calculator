@@ -45,10 +45,36 @@ npm run build    # type-check + production build
 
 That's it — the card renders automatically, grouped by `caseGroup`.
 
+## Calculator types
+
+Calculators can pull from the shared Exhibit 1 assumptions, define their own
+**local inputs** (standalone tools), or both. Local inputs are editable on the
+card, persist to `localStorage`, and have their own per-card Reset.
+
+```ts
+inputs: [
+  { key: 'fv', label: 'Future value (FV)', format: 'currency', default: 1000, step: 100 },
+],
+compute: (assumptions, inputs) => [ /* result sections */ ],
+```
+
 ## Included formulas
 
+**Valuation** (reads Exhibit 1)
 - **Firm value — growing perpetuity**: `V = FCFnext / (r − g)`, reported for the
   good/bad planning states and as the probability-weighted expected value.
+
+**Time value of money** (standalone inputs)
+- Present value (lump sum) · Future value (lump sum)
+- Present / future value of an annuity (ordinary or due)
+- Perpetuity · Growing perpetuity
+- Loan payment (amortizing) · Net present value (level cash flows)
+
+**Rates & growth**
+- Effective annual rate (EAR), incl. continuous compounding
+- Compound annual growth rate (CAGR)
+
+Reusable math lives in `src/lib/finance.ts`.
 
 ## Adding a new assumption input
 

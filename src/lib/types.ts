@@ -69,6 +69,22 @@ export interface FieldGroup {
   fields: FieldMeta[]
 }
 
+/**
+ * A self-contained input owned by a single calculator (not part of Exhibit 1).
+ * Used for generic tools like PV/FV where the inputs are standalone.
+ */
+export interface CalcInput {
+  key: string
+  label: string
+  format: FieldFormat
+  default: number
+  step?: number
+  hint?: string
+}
+
+/** Runtime values for a calculator's local inputs, keyed by `CalcInput.key`. */
+export type CalcInputValues = Record<string, number>
+
 /** A single labelled output produced by a calculator. */
 export interface ResultRow {
   label: string
@@ -100,9 +116,14 @@ export interface Calculator {
   /** Optional longer explanation shown under the formula. */
   description?: string
   /** Assumption keys this calculator depends on (drives highlighting). */
-  usedKeys: AssumptionKey[]
-  /** Pure function: assumptions in, result sections out. */
-  compute: (a: Assumptions) => ResultSection[]
+  usedKeys?: AssumptionKey[]
+  /** Self-contained inputs this calculator edits locally (e.g. PV/FV tools). */
+  inputs?: CalcInput[]
+  /**
+   * Pure function: shared assumptions + this calculator's local input values in,
+   * result sections out.
+   */
+  compute: (a: Assumptions, inputs: CalcInputValues) => ResultSection[]
   /** Optional custom UI rendered below the standard results. */
-  extra?: (a: Assumptions) => ReactNode
+  extra?: (a: Assumptions, inputs: CalcInputValues) => ReactNode
 }

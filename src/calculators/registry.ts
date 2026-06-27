@@ -1,5 +1,6 @@
 import type { Calculator } from '../lib/types'
 import { firmValueGrowingPerpetuity } from './firmValue'
+import { tvmCalculators } from './tvm'
 
 /**
  * The list of every calculator the app knows about.
@@ -9,7 +10,7 @@ import { firmValueGrowingPerpetuity } from './firmValue'
  *   2. Import it here and add it to the array below.
  * It will automatically appear in the UI, grouped by its `caseGroup`.
  */
-export const CALCULATORS: Calculator[] = [firmValueGrowingPerpetuity]
+export const CALCULATORS: Calculator[] = [firmValueGrowingPerpetuity, ...tvmCalculators]
 
 /** Calculators grouped by their `caseGroup`, preserving first-seen order. */
 export function calculatorsByGroup(): { group: string; calculators: Calculator[] }[] {

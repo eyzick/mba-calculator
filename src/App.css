@@ -169,6 +169,45 @@
   cursor: default;
 }
 
+.btn--ghost {
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  background: transparent;
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: var(--bg-elev-2);
+}
+
+/* ---- Calculator local inputs ---- */
+.card__inputs {
+  margin-top: 16px;
+  padding: 14px;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card__inputs-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card__inputs-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.card__inputs .field__input {
+  background: var(--bg-elev);
+}
+
 /* ---- Case groups ---- */
 .app__main {
   display: flex;
@@ -176,10 +215,126 @@
   gap: 32px;
 }
 
+/* ---- Library toolbar / search ---- */
+.library {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.library__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 280px;
+}
+
+.search__icon {
+  position: absolute;
+  left: 14px;
+  font-size: 1.05rem;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.search__input {
+  width: 100%;
+  padding: 12px 38px 12px 38px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.search__input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(91, 140, 255, 0.18);
+}
+
+.search__input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.search__clear {
+  position: absolute;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 6px;
+  background: var(--bg-elev-2);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.search__clear:hover {
+  color: var(--text);
+}
+
+.library__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.library__count {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.library__empty {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+}
+
+/* ---- Case group (collapsible) ---- */
 .case-group__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
   margin: 0 0 14px;
+  padding: 4px 0;
+  background: none;
+  border: none;
+  color: var(--text);
   font-size: 1.15rem;
   font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+
+.case-group__chevron {
+  display: inline-block;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  transition: transform 0.15s ease;
+}
+
+.case-group__chevron--open {
+  transform: rotate(90deg);
+}
+
+.case-group__badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 1px 9px;
 }
 
 .case-group__cards {
@@ -188,32 +343,86 @@
   gap: 18px;
 }
 
-/* ---- Calculator card ---- */
+/* ---- Calculator card (collapsible) ---- */
 .card {
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 20px;
   box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.card--open {
+  border-color: rgba(91, 140, 255, 0.4);
+}
+
+.card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 18px;
+  background: none;
+  border: none;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.card__header:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.card__chevron {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  transition: transform 0.15s ease;
+}
+
+.card--open .card__chevron {
+  transform: rotate(90deg);
+  color: var(--accent);
+}
+
+.card__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
 }
 
 .card__title {
-  margin: 0 0 10px;
-  font-size: 1.02rem;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .card__formula {
   display: inline-block;
-  padding: 6px 10px;
+  align-self: flex-start;
+  padding: 4px 9px;
   background: var(--bg-elev-2);
   border: 1px solid var(--border);
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--accent);
 }
 
+.card__preview {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.card__body {
+  padding: 0 18px 18px;
+}
+
 .card__desc {
-  margin: 10px 0 0;
+  margin: 4px 0 0;
   font-size: 0.82rem;
   line-height: 1.45;
   color: var(--text-dim);
