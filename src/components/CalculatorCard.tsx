@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAssumptions } from '../state/AssumptionsContext'
 import type { CalcInputValues, Calculator } from '../lib/types'
 import { NumberField } from './NumberField'
@@ -6,6 +6,18 @@ import { NumberField } from './NumberField'
 function storageKey(id: string) {
   return `mba617:calc:${id}`
 }
+
+function sizeKey(id: string) {
+  return `mba617:size:${id}`
+}
+
+interface CardSize {
+  w: number
+  h: number
+}
+
+const MIN_W = 320
+const MIN_H = 220
 
 function defaultsFor(calculator: Calculator): CalcInputValues {
   const out: CalcInputValues = {}
@@ -47,11 +59,64 @@ export function CalculatorCard({ calculator, expanded, onToggle }: CalculatorCar
     [calculator.inputs, values],
   )
 
+  // Drag-to-resize: when a size is set the card breaks out to its own
+  // full-width row so it can grow freely.
+  const cardRef = useRef<HTMLElement>(null)
+  const [size, setSize] = useState<CardSize | null>(() => {
+    try {
+      const raw = localStorage.getItem(sizeKey(calculator.id))
+      return raw ? (JSON.parse(raw) as CardSize) : null
+    } catch {
+      return null
+    }
+  })
+
+  useEffect(() => {
+    try {
+      if (size) localStorage.setItem(sizeKey(calculator.id), JSON.stringify(size))
+      else localStorage.removeItem(sizeKey(calculator.id))
+    } catch {
+      // ignore
+    }
+  }, [calculator.id, size])
+
+  const startResize = useCallback((e: React.PointerEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const el = cardRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const maxW = el.parentElement?.getBoundingClientRect().width ?? window.innerWidth
+    const startX = e.clientX
+    const startY = e.clientY
+
+    const onMove = (ev: PointerEvent) => {
+      const w = Math.min(maxW, Math.max(MIN_W, rect.width + (ev.clientX - startX)))
+      const h = Math.max(MIN_H, rect.height + (ev.clientY - startY))
+      setSize({ w, h })
+    }
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      document.body.classList.remove('resizing')
+    }
+    document.body.classList.add('resizing')
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+  }, [])
+
   const sections = calculator.compute(assumptions, values)
   const headline = sections.flatMap((s) => s.rows).find((r) => r.emphasis)
 
+  const sized = expanded && size != null
+  const style = sized ? { width: size!.w, height: size!.h } : undefined
+
   return (
-    <article className={`card${expanded ? ' card--open' : ''}`}>
+    <article
+      ref={cardRef}
+      className={`card${expanded ? ' card--open' : ''}${sized ? ' card--sized' : ''}`}
+      style={style}
+    >
       <button
         type="button"
         className="card__header"
@@ -119,6 +184,15 @@ export function CalculatorCard({ calculator, expanded, onToggle }: CalculatorCar
           {calculator.extra ? (
             <div className="card__extra">{calculator.extra(assumptions, values)}</div>
           ) : null}
+
+          <div
+            className="card__resize"
+            onPointerDown={startResize}
+            onDoubleClick={() => setSize(null)}
+            title="Drag to resize · double-click to reset"
+            role="separator"
+            aria-label="Resize card"
+          />
         </div>
       )}
     </article>

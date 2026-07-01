@@ -401,6 +401,9 @@
 
 /* ---- Calculator card (collapsible) ---- */
 .card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -411,6 +414,42 @@
 
 .card--open {
   border-color: rgba(91, 140, 255, 0.4);
+}
+
+/* A resized card breaks out to its own full-width row so it can grow freely. */
+.card--sized {
+  grid-column: 1 / -1;
+  max-width: 100%;
+}
+
+.card--sized .card__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* ---- Resize handle ---- */
+.card__resize {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 18px;
+  height: 18px;
+  cursor: nwse-resize;
+  border-radius: 0 0 12px 0;
+  background:
+    linear-gradient(135deg, transparent 40%, var(--text-dim) 40%, var(--text-dim) 52%, transparent 52%, transparent 66%, var(--text-dim) 66%, var(--text-dim) 78%, transparent 78%);
+  opacity: 0.5;
+  touch-action: none;
+}
+
+.card__resize:hover {
+  opacity: 1;
+}
+
+body.resizing {
+  cursor: nwse-resize;
+  user-select: none;
 }
 
 .card__header {
