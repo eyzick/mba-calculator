@@ -10,6 +10,7 @@ import {
   payment,
   perpetuityPV,
   presentValue,
+  rateFromPayment,
 } from '../lib/finance'
 import { money, percent } from '../lib/format'
 import type { Calculator } from '../lib/types'
@@ -255,6 +256,73 @@ export const loanPayment: Calculator = {
   extra: (_a, v) => <AmortizationTable principal={v.pv} r={v.r} n={v.n} />,
 }
 
+export const impliedLoanRate: Calculator = {
+  id: 'implied-loan-rate',
+  title: 'Implied interest rate (from payment)',
+  caseGroup: TVM,
+  formula: 'PV = PMT × [1 − (1 + r)⁻ⁿ] / r  →  solve for r',
+  description:
+    'Back out the interest rate on a loan when you know the amount borrowed, the level payment, and the number of payments. Solved numerically.',
+  inputs: [
+    { key: 'pv', label: 'Amount borrowed (PV)', format: 'currency', default: 32500, step: 500 },
+    { key: 'pmt', label: 'Payment', format: 'currency', default: 676.96, step: 10 },
+    { key: 'n', label: 'Number of payments (n)', format: 'number', default: 60, step: 1 },
+    {
+      key: 'm',
+      label: 'Payments / year (m)',
+      format: 'number',
+      default: 12,
+      step: 1,
+      hint: 'monthly 12 · quarterly 4 · annual 1',
+    },
+  ],
+  compute: (_a, v) => {
+    const periodic = rateFromPayment(v.pv, v.pmt, v.n)
+    if (!Number.isFinite(periodic)) {
+      return [
+        {
+          rows: [
+            {
+              label: 'Implied rate',
+              value: 'No solution',
+              emphasis: true,
+              note: 'Check that the payment is large enough to repay the principal over n periods.',
+            },
+          ],
+        },
+      ]
+    }
+    const apr = periodic * v.m
+    const ear = Math.pow(1 + periodic, v.m) - 1
+    const totalPaid = v.pmt * v.n
+    return [
+      {
+        rows: [
+          {
+            label: 'APR (nominal, r × m)',
+            value: percent(apr, 3),
+            emphasis: true,
+            note: `Periodic rate = ${percent(periodic, 4)} per period`,
+          },
+        ],
+      },
+      {
+        heading: 'Detail',
+        rows: [
+          { label: 'Effective annual rate (EAR)', value: percent(ear, 3) },
+          { label: 'Total paid', value: money(totalPaid) },
+          { label: 'Total interest', value: money(totalPaid - v.pv) },
+        ],
+      },
+    ]
+  },
+  extra: (_a, v) => {
+    const periodic = rateFromPayment(v.pv, v.pmt, v.n)
+    if (!Number.isFinite(periodic)) return null
+    return <AmortizationTable principal={v.pv} r={periodic} n={v.n} />
+  },
+}
+
 export const netPresentValue: Calculator = {
   id: 'npv-level',
   title: 'Net present value (level cash flows)',
@@ -341,6 +409,7 @@ export const tvmCalculators: Calculator[] = [
   perpetuity,
   growingPerpetuity,
   loanPayment,
+  impliedLoanRate,
   netPresentValue,
   effectiveRate,
   growthRate,

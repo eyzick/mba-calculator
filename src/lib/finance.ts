@@ -77,6 +77,46 @@ export function cagr(begin: number, end: number, n: number): number {
   return Math.pow(end / begin, 1 / n) - 1
 }
 
+/**
+ * Solve for the periodic interest rate implied by a loan: given a present
+ * value (amount borrowed), a level payment, and the number of payments, find
+ * the rate `r` such that PV = PMT × [1 − (1 + r)⁻ⁿ] / r.
+ *
+ * There is no closed form, so this uses bisection (robust and monotonic since
+ * the payment strictly increases in r). Returns the rate per period, or NaN if
+ * the inputs are infeasible.
+ */
+export function rateFromPayment(pv: number, pmt: number, n: number): number {
+  if (pv <= 0 || pmt <= 0 || n <= 0) return NaN
+
+  // payment(pv, r, n) as a function of r, with the r → 0 limit handled.
+  const paymentAt = (r: number) => (Math.abs(r) < 1e-12 ? pv / n : (pv * r) / (1 - Math.pow(1 + r, -n)))
+  const f = (r: number) => paymentAt(r) - pmt
+
+  let lo = -0.999999 // rate can't be ≤ −100% per period
+  let hi = 1 // 100% per period upper bound, expanded below if needed
+
+  if (f(lo) > 0) return NaN // payment too small to be feasible
+
+  let fhi = f(hi)
+  let guard = 0
+  while (fhi < 0 && hi < 1e9 && guard++ < 200) {
+    hi *= 2
+    fhi = f(hi)
+  }
+  if (fhi < 0) return NaN // payment too large to be feasible
+
+  let mid = 0
+  for (let i = 0; i < 300; i++) {
+    mid = (lo + hi) / 2
+    const fm = f(mid)
+    if (Math.abs(fm) < 1e-11) break
+    if (fm < 0) lo = mid
+    else hi = mid
+  }
+  return mid
+}
+
 export interface AmortizationRow {
   period: number
   payment: number
