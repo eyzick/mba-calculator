@@ -452,6 +452,123 @@ body.resizing {
   user-select: none;
 }
 
+/* ---- TVM Solver ---- */
+.tvm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.tvm__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.tvm__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tvm__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-elev-2);
+}
+
+.tvm__row--solve {
+  border-color: rgba(91, 140, 255, 0.5);
+  background: linear-gradient(180deg, rgba(91, 140, 255, 0.14), rgba(91, 140, 255, 0.04));
+}
+
+.tvm__row .field {
+  flex: 1;
+}
+
+.tvm__pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.tvm__pick input {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.tvm__result {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tvm__result-label {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.tvm__result-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--accent);
+}
+
+.tvm__settings {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+.tvm__settings .field {
+  flex: 0 0 200px;
+}
+
+.tvm__toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.seg__btn {
+  padding: 7px 16px;
+  background: var(--bg-elev-2);
+  border: none;
+  color: var(--text-dim);
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.seg__btn--on {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
 .card__header {
   display: flex;
   align-items: center;

@@ -16,11 +16,22 @@ import { money, percent } from '../lib/format'
 import type { Calculator } from '../lib/types'
 import { CompoundingTable } from '../components/CompoundingTable'
 import { AmortizationTable } from '../components/AmortizationTable'
+import { TvmSolver } from '../components/TvmSolver'
 
 const TVM = 'Time value of money'
 const RATES = 'Rates & growth'
 
 const isDue = (v: number | undefined) => v === 1
+
+export const tvmSolver: Calculator = {
+  id: 'tvm-solver',
+  title: 'TVM Solver (any 4 → the 5th)',
+  caseGroup: TVM,
+  formula: '0 = PV(1+i)ⁿ + PMT(1 + i·type)·[((1+i)ⁿ − 1)/i] + FV',
+  description:
+    'The one equation that ties N, rate, PV, PMT, and FV together. Enter any four and solve for the fifth — this replaces the separate PV / FV / PMT / rate / N tools.',
+  Body: TvmSolver,
+}
 
 export const presentValueLumpSum: Calculator = {
   id: 'pv-lump-sum',
@@ -402,6 +413,7 @@ export const growthRate: Calculator = {
 }
 
 export const tvmCalculators: Calculator[] = [
+  tvmSolver,
   presentValueLumpSum,
   futureValueLumpSum,
   annuityPresentValue,

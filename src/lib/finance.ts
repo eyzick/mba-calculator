@@ -117,6 +117,111 @@ export function rateFromPayment(pv: number, pmt: number, n: number): number {
   return mid
 }
 
+/* -------------------------------------------------------------------------- */
+/* Unified TVM solver                                                          */
+/* -------------------------------------------------------------------------- */
+
+/** The five interrelated time-value-of-money variables. */
+export type TvmVar = 'n' | 'rate' | 'pv' | 'pmt' | 'fv'
+
+export interface TvmState {
+  /** Number of periods. */
+  n: number
+  /** Rate per period (decimal). */
+  i: number
+  pv: number
+  pmt: number
+  fv: number
+  /** 0 = payments at period end (ordinary), 1 = beginning (annuity due). */
+  type: number
+}
+
+function tvmK(i: number, n: number): number {
+  return Math.pow(1 + i, n)
+}
+
+/** Annuity accumulation factor ((1+i)^n − 1) / i, with the i → 0 limit. */
+function tvmSeries(i: number, n: number): number {
+  return i === 0 ? n : (Math.pow(1 + i, n) - 1) / i
+}
+
+/**
+ * The core cash-flow identity (calculator sign convention):
+ *   0 = PV·(1+i)^n + PMT·(1 + i·type)·[((1+i)^n − 1)/i] + FV
+ * Inflows are positive, outflows negative — so PV and PMT usually differ in sign.
+ */
+function tvmEquation(s: TvmState): number {
+  const k = tvmK(s.i, s.n)
+  const c = 1 + s.i * s.type
+  return s.pv * k + s.pmt * c * tvmSeries(s.i, s.n) + s.fv
+}
+
+/** Solve for the periodic rate by scanning for a sign change, then bisecting. */
+function tvmSolveRate(s: Omit<TvmState, 'i'>): number {
+  const g = (i: number) => tvmEquation({ ...s, i })
+  const start = -0.9999
+  const end = 100
+  const steps = 4000
+
+  let prev = start
+  let fPrev = g(prev)
+  let lo = NaN
+  let hi = NaN
+  for (let k = 1; k <= steps; k++) {
+    const cur = start + ((end - start) * k) / steps
+    const fCur = g(cur)
+    if (fCur === 0) return cur
+    if (fPrev * fCur < 0) {
+      lo = prev
+      hi = cur
+      break
+    }
+    prev = cur
+    fPrev = fCur
+  }
+  if (Number.isNaN(lo)) return NaN
+
+  for (let it = 0; it < 200; it++) {
+    const mid = (lo + hi) / 2
+    const fMid = g(mid)
+    if (Math.abs(fMid) < 1e-10) return mid
+    if (g(lo) * fMid < 0) hi = mid
+    else lo = mid
+  }
+  return (lo + hi) / 2
+}
+
+/**
+ * Solve for one TVM variable given the other four. For `rate`, the returned
+ * value is the rate *per period*. Returns NaN if there is no valid solution.
+ */
+export function tvmSolve(unknown: TvmVar, s: TvmState): number {
+  const k = tvmK(s.i, s.n)
+  const c = 1 + s.i * s.type
+  const series = tvmSeries(s.i, s.n)
+
+  switch (unknown) {
+    case 'fv':
+      return -(s.pv * k + s.pmt * c * series)
+    case 'pv':
+      return -(s.fv + s.pmt * c * series) / k
+    case 'pmt':
+      return s.i === 0 ? -(s.pv + s.fv) / s.n : -(s.pv * k + s.fv) / (c * series)
+    case 'n': {
+      if (s.i === 0) return s.pmt === 0 ? NaN : -(s.pv + s.fv) / s.pmt
+      const a = (s.pmt * c) / s.i
+      const num = a - s.fv
+      const den = s.pv + a
+      if (den === 0 || num / den <= 0) return NaN
+      return Math.log(num / den) / Math.log(1 + s.i)
+    }
+    case 'rate':
+      return tvmSolveRate({ n: s.n, pv: s.pv, pmt: s.pmt, fv: s.fv, type: s.type })
+    default:
+      return NaN
+  }
+}
+
 export interface AmortizationRow {
   period: number
   payment: number

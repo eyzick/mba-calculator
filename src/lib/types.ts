@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 
 /**
  * The full set of base-case planning inputs (Exhibit 1).
@@ -121,9 +121,14 @@ export interface Calculator {
   inputs?: CalcInput[]
   /**
    * Pure function: shared assumptions + this calculator's local input values in,
-   * result sections out.
+   * result sections out. Optional when the calculator provides its own `Body`.
    */
-  compute: (a: Assumptions, inputs: CalcInputValues) => ResultSection[]
+  compute?: (a: Assumptions, inputs: CalcInputValues) => ResultSection[]
   /** Optional custom UI rendered below the standard results. */
   extra?: (a: Assumptions, inputs: CalcInputValues) => ReactNode
+  /**
+   * Optional fully-custom body component. When set, it replaces the standard
+   * inputs/results UI entirely (the calculator manages its own state).
+   */
+  Body?: ComponentType
 }
